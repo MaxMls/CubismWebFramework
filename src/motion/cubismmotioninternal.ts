@@ -38,8 +38,13 @@ export enum CubismMotionSegmentType {
  * モーションカーブの制御点。
  */
 export class CubismMotionPoint {
-  time = 0.0; // 時間[秒]
-  value = 0.0; // 値
+  constructor(time = 0.0, value = 0.0) {
+    this.time = time;
+    this.value = value;
+  }
+
+  time: number; // 時間[秒]
+  value: number; // 値
 }
 
 /**
@@ -119,7 +124,7 @@ export class CubismMotionData {
 
     this.curves = new csmVector<CubismMotionCurve>();
     this.segments = new csmVector<CubismMotionSegment>();
-    this.points = new csmVector<CubismMotionPoint>();
+    this.points = [];
     this.events = new csmVector<CubismMotionEvent>();
   }
 
@@ -130,7 +135,7 @@ export class CubismMotionData {
   fps: number; // フレームレート
   curves: csmVector<CubismMotionCurve>; // カーブのリスト
   segments: csmVector<CubismMotionSegment>; // セグメントのリスト
-  points: csmVector<CubismMotionPoint>; // ポイントのリスト
+  points: CubismMotionPoint[]; // ポイントのリスト
   events: csmVector<CubismMotionEvent>; // イベントのリスト
 }
 

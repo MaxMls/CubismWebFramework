@@ -213,24 +213,24 @@ function evaluateCurve(
     pointPosition =
       motionData.segments.at(i).basePointIndex +
       ((motionData.segments.at(i).segmentType as CubismMotionSegmentType) ==
-      CubismMotionSegmentType.CubismMotionSegmentType_Bezier
+        CubismMotionSegmentType.CubismMotionSegmentType_Bezier
         ? 3
         : 1);
 
     // Break if time lies within current segment.
-    if (motionData.points.at(pointPosition).time > time) {
+    if (motionData.points[pointPosition].time > time) {
       target = i;
       break;
     }
   }
 
   if (target == -1) {
-    return motionData.points.at(pointPosition).value;
+    return motionData.points[pointPosition].value;
   }
 
   const segment: CubismMotionSegment = motionData.segments.at(target);
 
-  return segment.evaluate(motionData.points.get(segment.basePointIndex), time);
+  return segment.evaluate(motionData.points.slice(segment.basePointIndex), time);
 }
 
 /**
@@ -325,17 +325,17 @@ export class CubismMotion extends ACubismMotion {
       this._fadeInSeconds <= 0.0
         ? 1.0
         : CubismMath.getEasingSine(
-            (userTimeSeconds - motionQueueEntry.getFadeInStartTime()) /
-              this._fadeInSeconds
-          );
+          (userTimeSeconds - motionQueueEntry.getFadeInStartTime()) /
+          this._fadeInSeconds
+        );
 
     const tmpFadeOut: number =
       this._fadeOutSeconds <= 0.0 || motionQueueEntry.getEndTime() < 0.0
         ? 1.0
         : CubismMath.getEasingSine(
-            (motionQueueEntry.getEndTime() - userTimeSeconds) /
-              this._fadeOutSeconds
-          );
+          (motionQueueEntry.getEndTime() - userTimeSeconds) /
+          this._fadeOutSeconds
+        );
     let value: number;
     let c: number, parameterIndex: number;
 
@@ -355,7 +355,7 @@ export class CubismMotion extends ACubismMotion {
       c = 0;
       c < this._motionData.curveCount &&
       curves.at(c).type ==
-        CubismMotionCurveTarget.CubismMotionCurveTarget_Model;
+      CubismMotionCurveTarget.CubismMotionCurveTarget_Model;
       ++c
     ) {
       // Evaluate curve and call handler.
@@ -377,7 +377,7 @@ export class CubismMotion extends ACubismMotion {
       ;
       c < this._motionData.curveCount &&
       curves.at(c).type ==
-        CubismMotionCurveTarget.CubismMotionCurveTarget_Parameter;
+      CubismMotionCurveTarget.CubismMotionCurveTarget_Parameter;
       ++c
     ) {
       parameterMotionCurveCount++;
@@ -442,9 +442,9 @@ export class CubismMotion extends ACubismMotion {
             curves.at(c).fadeInTime == 0.0
               ? 1.0
               : CubismMath.getEasingSine(
-                  (userTimeSeconds - motionQueueEntry.getFadeInStartTime()) /
-                    curves.at(c).fadeInTime
-                );
+                (userTimeSeconds - motionQueueEntry.getFadeInStartTime()) /
+                curves.at(c).fadeInTime
+              );
         }
 
         if (curves.at(c).fadeOutTime < 0.0) {
@@ -452,12 +452,12 @@ export class CubismMotion extends ACubismMotion {
         } else {
           fout =
             curves.at(c).fadeOutTime == 0.0 ||
-            motionQueueEntry.getEndTime() < 0.0
+              motionQueueEntry.getEndTime() < 0.0
               ? 1.0
               : CubismMath.getEasingSine(
-                  (motionQueueEntry.getEndTime() - userTimeSeconds) /
-                    curves.at(c).fadeOutTime
-                );
+                (motionQueueEntry.getEndTime() - userTimeSeconds) /
+                curves.at(c).fadeOutTime
+              );
         }
 
         const paramWeight: number = this._weight * fin * fout;
@@ -519,7 +519,7 @@ export class CubismMotion extends ACubismMotion {
       ;
       c < this._motionData.curveCount &&
       curves.at(c).type ==
-        CubismMotionCurveTarget.CubismMotionCurveTarget_PartOpacity;
+      CubismMotionCurveTarget.CubismMotionCurveTarget_PartOpacity;
       ++c
     ) {
       // Find parameter index.
@@ -756,6 +756,7 @@ export class CubismMotion extends ACubismMotion {
       this._fadeOutSeconds = 1.0;
     }
 
+
     this._motionData.curves.updateSize(
       this._motionData.curveCount,
       CubismMotionCurve,
@@ -766,11 +767,7 @@ export class CubismMotion extends ACubismMotion {
       CubismMotionSegment,
       true
     );
-    this._motionData.points.updateSize(
-      json.getMotionTotalPointCount(),
-      CubismMotionPoint,
-      true
-    );
+    this._motionData.points = [];
     this._motionData.events.updateSize(
       this._motionData.eventCount,
       CubismMotionEvent,
@@ -828,10 +825,10 @@ export class CubismMotion extends ACubismMotion {
           this._motionData.segments.at(totalSegmentCount).basePointIndex =
             totalPointCount;
 
-          this._motionData.points.at(totalPointCount).time =
-            json.getMotionCurveSegment(curveCount, segmentPosition);
-          this._motionData.points.at(totalPointCount).value =
-            json.getMotionCurveSegment(curveCount, segmentPosition + 1);
+          this._motionData.points[totalPointCount] = new CubismMotionPoint(
+            json.getMotionCurveSegment(curveCount, segmentPosition),
+            json.getMotionCurveSegment(curveCount, segmentPosition + 1),
+          );
 
           totalPointCount += 1;
           segmentPosition += 2;
@@ -844,6 +841,8 @@ export class CubismMotion extends ACubismMotion {
           curveCount,
           segmentPosition
         );
+        // console.log(segment);
+
         switch (segment) {
           case CubismMotionSegmentType.CubismMotionSegmentType_Linear: {
             this._motionData.segments.at(totalSegmentCount).segmentType =
@@ -851,10 +850,10 @@ export class CubismMotion extends ACubismMotion {
             this._motionData.segments.at(totalSegmentCount).evaluate =
               linearEvaluate;
 
-            this._motionData.points.at(totalPointCount).time =
-              json.getMotionCurveSegment(curveCount, segmentPosition + 1);
-            this._motionData.points.at(totalPointCount).value =
-              json.getMotionCurveSegment(curveCount, segmentPosition + 2);
+            this._motionData.points[totalPointCount] = new CubismMotionPoint(
+              json.getMotionCurveSegment(curveCount, segmentPosition + 1),
+              json.getMotionCurveSegment(curveCount, segmentPosition + 2),
+            );
 
             totalPointCount += 1;
             segmentPosition += 3;
@@ -865,6 +864,8 @@ export class CubismMotion extends ACubismMotion {
             this._motionData.segments.at(totalSegmentCount).segmentType =
               CubismMotionSegmentType.CubismMotionSegmentType_Bezier;
 
+            
+
             if (areBeziersRestructed || UseOldBeziersCurveMotion) {
               this._motionData.segments.at(totalSegmentCount).evaluate =
                 bezierEvaluate;
@@ -873,20 +874,20 @@ export class CubismMotion extends ACubismMotion {
                 bezierEvaluateCardanoInterpretation;
             }
 
-            this._motionData.points.at(totalPointCount).time =
-              json.getMotionCurveSegment(curveCount, segmentPosition + 1);
-            this._motionData.points.at(totalPointCount).value =
-              json.getMotionCurveSegment(curveCount, segmentPosition + 2);
+            this._motionData.points[totalPointCount] = new CubismMotionPoint(
+              json.getMotionCurveSegment(curveCount, segmentPosition + 1),
+              json.getMotionCurveSegment(curveCount, segmentPosition + 2),
+            );
 
-            this._motionData.points.at(totalPointCount + 1).time =
-              json.getMotionCurveSegment(curveCount, segmentPosition + 3);
-            this._motionData.points.at(totalPointCount + 1).value =
-              json.getMotionCurveSegment(curveCount, segmentPosition + 4);
+            this._motionData.points[totalPointCount + 1] = new CubismMotionPoint(
+              json.getMotionCurveSegment(curveCount, segmentPosition + 3),
+              json.getMotionCurveSegment(curveCount, segmentPosition + 4),
+            );
 
-            this._motionData.points.at(totalPointCount + 2).time =
-              json.getMotionCurveSegment(curveCount, segmentPosition + 5);
-            this._motionData.points.at(totalPointCount + 2).value =
-              json.getMotionCurveSegment(curveCount, segmentPosition + 6);
+            this._motionData.points[totalPointCount + 2] = new CubismMotionPoint(
+              json.getMotionCurveSegment(curveCount, segmentPosition + 5),
+              json.getMotionCurveSegment(curveCount, segmentPosition + 6),
+            );
 
             totalPointCount += 3;
             segmentPosition += 7;
@@ -900,10 +901,10 @@ export class CubismMotion extends ACubismMotion {
             this._motionData.segments.at(totalSegmentCount).evaluate =
               steppedEvaluate;
 
-            this._motionData.points.at(totalPointCount).time =
-              json.getMotionCurveSegment(curveCount, segmentPosition + 1);
-            this._motionData.points.at(totalPointCount).value =
-              json.getMotionCurveSegment(curveCount, segmentPosition + 2);
+            this._motionData.points[totalPointCount] = new CubismMotionPoint(
+              json.getMotionCurveSegment(curveCount, segmentPosition + 1),
+              json.getMotionCurveSegment(curveCount, segmentPosition + 2),
+            );
 
             totalPointCount += 1;
             segmentPosition += 3;
@@ -917,10 +918,10 @@ export class CubismMotion extends ACubismMotion {
             this._motionData.segments.at(totalSegmentCount).evaluate =
               inverseSteppedEvaluate;
 
-            this._motionData.points.at(totalPointCount).time =
-              json.getMotionCurveSegment(curveCount, segmentPosition + 1);
-            this._motionData.points.at(totalPointCount).value =
-              json.getMotionCurveSegment(curveCount, segmentPosition + 2);
+            this._motionData.points[totalPointCount] = new CubismMotionPoint(
+              json.getMotionCurveSegment(curveCount, segmentPosition + 1),
+              json.getMotionCurveSegment(curveCount, segmentPosition + 2),
+            );
 
             totalPointCount += 1;
             segmentPosition += 3;
