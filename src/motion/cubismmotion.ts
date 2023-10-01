@@ -522,18 +522,11 @@ export class CubismMotion extends ACubismMotion {
       CubismMotionCurveTarget.CubismMotionCurveTarget_PartOpacity;
       ++c
     ) {
-      // Find parameter index.
-      parameterIndex = model.getParameterIndex(curves.at(c).id);
-
-      // Skip curve evaluation if no value in sink.
-      if (parameterIndex == -1) {
-        continue;
-      }
-
       // Evaluate curve and apply value.
       value = evaluateCurve(this._motionData, c, time);
 
-      model.setParameterValueByIndex(parameterIndex, value);
+      // model.setParameterValueByIndex(parameterIndex, value);
+      model.setPartOpacityById(curves.at(c).id, value);
     }
 
     if (timeOffsetSeconds >= this._motionData.duration) {
