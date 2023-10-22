@@ -1551,6 +1551,10 @@ export class CubismModel {
     this._model = null;
   }
 
+  public get drawableIds() {
+    return this._drawableIds;
+  }
+
   private _notExistPartOpacities: csmMap<number, number>; // 存在していないパーツの不透明度のリスト
   private _notExistPartId: csmMap<CubismIdHandle, number>; // 存在していないパーツIDのリスト
 
