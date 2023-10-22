@@ -103,7 +103,7 @@ export class CubismTargetPoint {
       // 	考えているので、t＝１として消してよい（※未検証）
 
       const maxV: number =
-        0.5 *
+        0.2 *
         (CubismMath.sqrt(maxA * maxA + 16.0 * maxA * d - 8.0 * maxA * d) -
           maxA);
       const curV: number = CubismMath.sqrt(
